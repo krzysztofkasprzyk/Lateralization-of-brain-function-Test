@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test lateralizacji - web</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div id="app-shell" class="app-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Web Version 1</p>
+        <h1>Test lateralizacji w Chrome</h1>
+        <p class="hero-copy">
+          Samodzielna wersja przegladarkowa dla Windows i macOS.
+          Nie wymaga instalacji bibliotek. Otwiera sie bezposrednio w Google Chrome.
+        </p>
+      </div>
+      <div class="hero-badge">
+        <span class="badge-kicker">TLDT / LDT</span>
+        <strong>Browser-first workflow</strong>
+        <span>CSV, trening, pauza, pelny ekran, Chrome</span>
+      </div>
+    </header>
+
+    <main>
+      <section id="screen-home" class="screen active">
+        <div class="layout-grid">
+          <section class="panel panel-form">
+            <div class="panel-header">
+              <h2>Konfiguracja badania</h2>
+              <p>Wprowadz dane uczestnika, ustaw czasy i przygotuj plik CSV.</p>
+            </div>
+
+            <form id="config-form" class="config-form">
+              <label>
+                <span>ID uczestnika</span>
+                <input id="participant-id" name="participant-id" type="text" value="ID_01" required>
+              </label>
+
+              <label>
+                <span>Nazwa pliku CSV</span>
+                <input id="csv-name" name="csv-name" type="text" value="ID_01_20260408.csv" required>
+              </label>
+
+              <div class="field-row">
+                <label>
+                  <span>Prob treningowych</span>
+                  <input id="practice-count" type="number" value="10" min="10" max="10" step="1">
+                </label>
+                <label>
+                  <span>Prob glownych</span>
+                  <input id="main-count" type="number" value="256" min="256" max="256" step="1">
+                </label>
+              </div>
+
+              <div class="field-row">
+                <label>
+                  <span>Fiksacja (ms)</span>
+                  <input id="fixation-ms" type="number" value="1000" min="100" max="5000" step="10">
+                </label>
+                <label>
+                  <span>Bodzce (ms)</span>
+                  <input id="stimulus-ms" type="number" value="100" min="20" max="1000" step="10">
+                </label>
+                <label>
+                  <span>Okno odpowiedzi (ms)</span>
+                  <input id="response-ms" type="number" value="2000" min="100" max="5000" step="10">
+                </label>
+              </div>
+
+              <div class="field-row">
+                <label>
+                  <span>Lewy klawisz</span>
+                  <input id="left-key" type="text" value="F" readonly>
+                </label>
+                <label>
+                  <span>Prawy klawisz</span>
+                  <input id="right-key" type="text" value="J" readonly>
+                </label>
+              </div>
+
+              <div class="save-box">
+                <div>
+                  <strong>Auto-zapis CSV</strong>
+                  <p id="save-status">
+                    W Chrome mozesz wybrac plik CSV przed startem. Jesli pominiesz ten krok, plik pobierze sie na koncu.
+                  </p>
+                </div>
+                <button id="choose-save-file" class="btn btn-secondary" type="button">Wybierz plik CSV w Chrome</button>
+              </div>
+
+              <div id="config-error" class="notice notice-error hidden"></div>
+              <div id="config-info" class="notice notice-info">
+                Start uruchamia instrukcje, trening, czesc glowna i zapis wynikow.
+              </div>
+
+              <div class="button-row">
+                <button id="start-button" class="btn btn-primary" type="submit">Uruchom test</button>
+                <button id="self-test-button" class="btn btn-secondary" type="button">Uruchom self-test</button>
+              </div>
+            </form>
+          </section>
+
+          <aside class="sidebar">
+            <section class="panel info-card">
+              <h3>Sterowanie</h3>
+              <p>F = slowo po lewej, J = slowo po prawej, Spacja = po obu stronach brak prawdziwego slowa.</p>
+              <p>Esc w trakcie testu otwiera menu pauzy.</p>
+            </section>
+
+            <section class="panel info-card">
+              <h3>Zapis wynikow</h3>
+              <p>CSV zawiera 1 wiersz = 1 proba. W Chrome mozna wybrac plik i zapisywac dane w trakcie badania.</p>
+            </section>
+
+            <section class="panel info-card">
+              <h3>Chrome</h3>
+              <p>Ta wersja jest przygotowana pod Google Chrome na Windows i macOS. Dziala bez dodatkowej instalacji bibliotek.</p>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <section id="screen-instructions" class="screen screen-centered">
+        <div class="instruction-card">
+          <div class="instruction-progress" id="instruction-progress">1 / 4</div>
+          <h2 id="instruction-title">Instrukcja</h2>
+          <div id="instruction-body" class="instruction-body"></div>
+          <p class="instruction-footer">Nacisnij Spacje albo kliknij Dalej.</p>
+          <div class="button-row center">
+            <button id="instruction-next" class="btn btn-primary" type="button">Dalej</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="screen-break" class="screen screen-centered">
+        <div class="instruction-card">
+          <div class="instruction-progress" id="break-progress">Przerwa</div>
+          <h2 id="break-title">Podsumowanie etapu</h2>
+          <div id="break-body" class="instruction-body"></div>
+          <p class="instruction-footer">Nacisnij Spacje albo kliknij, aby kontynuowac.</p>
+          <div class="button-row center">
+            <button id="break-next" class="btn btn-primary" type="button">Kontynuuj</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="screen-run" class="screen screen-run">
+        <div class="run-stage" id="run-stage">
+          <div id="trial-counter" class="trial-counter">1 / 256</div>
+          <div id="trial-phase-label" class="phase-label">TRENING</div>
+          <div id="fixation" class="fixation hidden">+</div>
+          <div id="stimulus-left" class="stimulus stimulus-left hidden"></div>
+          <div id="stimulus-right" class="stimulus stimulus-right hidden"></div>
+          <div id="feedback" class="feedback hidden"></div>
+        </div>
+
+        <div id="pause-overlay" class="overlay hidden">
+          <div class="overlay-card">
+            <h2>Pauza badania</h2>
+            <p>Badanie jest wstrzymane. Mozesz wrocic do tej samej proby albo zakonczyc sesje.</p>
+            <div class="button-column">
+              <button id="pause-resume" class="btn btn-primary" type="button">Wroc do testu</button>
+              <button id="pause-fullscreen" class="btn btn-secondary" type="button">Przelacz pelny ekran</button>
+              <button id="pause-abort" class="btn btn-danger" type="button">Zakoncz test i wroc do menu</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="screen-summary" class="screen screen-centered">
+        <div class="instruction-card">
+          <div class="instruction-progress" id="summary-status">Podsumowanie</div>
+          <h2 id="summary-title">Wynik testu</h2>
+          <div id="summary-body" class="instruction-body"></div>
+          <div class="button-row center">
+            <button id="summary-download" class="btn btn-secondary" type="button">Pobierz CSV ponownie</button>
+            <button id="summary-restart" class="btn btn-primary" type="button">Nowy test</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="screen-self-test" class="screen screen-centered">
+        <div class="instruction-card">
+          <div class="instruction-progress">Self-test</div>
+          <h2>Walidacja wersji webowej</h2>
+          <pre id="self-test-output" class="self-test-output"></pre>
+          <div class="button-row center">
+            <button id="self-test-back" class="btn btn-primary" type="button">Powrot do menu</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script defer src="./app.js"></script>
+</body>
+</html>
