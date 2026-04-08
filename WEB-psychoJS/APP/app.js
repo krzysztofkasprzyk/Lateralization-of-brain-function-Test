@@ -5,6 +5,12 @@
   const VIEWING_DISTANCE_CM = 57;
   const ECCENTRICITY_DEG = 3.5;
   const LETTER_HEIGHT_DEG = 0.5;
+  const DEFAULT_MACBOOK_AIR_15_M4_PROFILE = {
+    label: 'MacBook Air 15" M4 (profil domyślny)',
+    monitorWidthCm: 32.66,
+    refreshRate: "60 Hz",
+    monitorResolution: "2880x1864",
+  };
   const STORAGE_KEYS = {
     stimuli: "tldt_web_stimuli_v1",
     calibration: "tldt_web_calibration_v1",
@@ -73,10 +79,12 @@
     "screen-summary", "screen-error", "screen-self-test", "nav-config", "nav-keyboard",
     "nav-calibration", "nav-editor", "nav-info", "nav-self-test", "home-backup-status",
     "config-form", "participant-id", "csv-name", "practice-count", "main-count",
-    "monitor-width-cm", "fixation-ms", "stimulus-ms", "response-ms", "choose-save-file",
+    "monitor-width-cm", "refresh-rate-hz", "monitor-resolution",
+    "fixation-ms", "stimulus-ms", "response-ms", "choose-save-file",
     "save-status", "environment-summary", "geometry-summary", "config-error", "config-back",
     "config-keyboard", "config-calibration", "config-editor", "start-button",
-    "calibration-environment", "calibration-monitor-width", "calibration-preview",
+    "calibration-environment", "calibration-monitor-width", "calibration-refresh-rate",
+    "calibration-monitor-resolution", "calibration-preview",
     "calibration-left", "calibration-right", "save-calibration", "calibration-back",
     "key-card-f", "key-card-j", "key-card-space", "key-card-backspace", "key-status-f",
     "key-status-j", "key-status-space", "key-status-backspace", "keyboard-last-event",
@@ -100,7 +108,12 @@
     refreshRateLabel: "pomiar...",
     config: null,
     stimuli: cloneStimuli(DEFAULT_STIMULI),
-    calibration: { monitorWidthCm: 53.0 },
+    calibration: {
+      monitorWidthCm: 0,
+      refreshRate: "",
+      monitorResolution: "",
+      sourceLabel: "",
+    },
     instructionIndex: 0,
     readyMode: "",
     phase: "idle",
@@ -153,9 +166,10 @@
     installGlobalErrorHandlers();
     bindEvents();
     loadStoredState();
+    state.env = detectEnvironment();
+    applyDefaultCalibrationProfile();
     renderStimulusEditor();
     refreshFormsFromState();
-    state.env = detectEnvironment();
     renderEnvironmentInfo();
     showScreen("screen-home");
     updateBackupNotice();
@@ -165,8 +179,13 @@
     } catch (_error) {
       state.refreshRateLabel = "nie udało się zmierzyć";
     }
+    applyDefaultCalibrationProfile();
     renderEnvironmentInfo();
-    updateGeometrySummary();
+    try {
+      updateGeometrySummary();
+    } catch (_error) {
+      elements["geometry-summary"].textContent = "Uzupełnij poprawnie rozdzielczość i refresh rate, aby zobaczyć podgląd geometrii.";
+    }
     if (!psychoJsAssetsAvailable()) {
       logEvent("ERROR", "Nie znaleziono lokalnych bibliotek PsychoJS. Wersja WEB-psychoJS nie uruchomi etapu prób.");
     }
@@ -205,7 +224,11 @@
     });
     elements["participant-id"].addEventListener("input", hydrateDefaultFileName);
     elements["monitor-width-cm"].addEventListener("input", syncCalibrationFields);
+    elements["refresh-rate-hz"].addEventListener("input", syncCalibrationFields);
+    elements["monitor-resolution"].addEventListener("input", syncCalibrationFields);
     elements["calibration-monitor-width"].addEventListener("input", syncConfigMonitorWidth);
+    elements["calibration-refresh-rate"].addEventListener("input", syncConfigMonitorWidth);
+    elements["calibration-monitor-resolution"].addEventListener("input", syncConfigMonitorWidth);
     elements["config-form"].addEventListener("submit", onStartRequested);
     elements["choose-save-file"].addEventListener("click", chooseSaveFile);
     elements["config-back"].addEventListener("click", resetToMenu);
@@ -275,8 +298,19 @@
       state.stimuli = storedStimuli;
     }
     const storedCalibration = safeParseJson(loadStorage(STORAGE_KEYS.calibration));
-    if (storedCalibration && Number.isFinite(Number(storedCalibration.monitorWidthCm))) {
-      state.calibration.monitorWidthCm = round1(Number(storedCalibration.monitorWidthCm));
+    if (storedCalibration) {
+      if (Number.isFinite(Number(storedCalibration.monitorWidthCm))) {
+        state.calibration.monitorWidthCm = round1(Number(storedCalibration.monitorWidthCm));
+      }
+      if (typeof storedCalibration.refreshRate === "string" && storedCalibration.refreshRate.trim()) {
+        state.calibration.refreshRate = storedCalibration.refreshRate.trim();
+      }
+      if (typeof storedCalibration.monitorResolution === "string" && storedCalibration.monitorResolution.trim()) {
+        state.calibration.monitorResolution = storedCalibration.monitorResolution.trim();
+      }
+      if (typeof storedCalibration.sourceLabel === "string" && storedCalibration.sourceLabel.trim()) {
+        state.calibration.sourceLabel = storedCalibration.sourceLabel.trim();
+      }
     }
     const storedLogs = safeParseJson(loadStorage(STORAGE_KEYS.logs));
     if (Array.isArray(storedLogs)) {
@@ -297,12 +331,37 @@
     } else if (/linux/i.test(platform)) {
       platformLabel = "Linux";
     }
+    const detectedResolution = getDetectedResolution();
     return {
       platformLabel,
-      resolutionLabel: `${window.screen.width} × ${window.screen.height} px`,
+      resolutionLabel: `${detectedResolution.replace("x", " × ")} px`,
       scaleLabel: `${round2(window.devicePixelRatio || 1)}x`,
       userAgent: ua,
+      detectedResolution,
     };
+  }
+
+  function getDefaultCalibrationProfile() {
+    if (state.env && state.env.platformLabel === "macOS") {
+      return { ...DEFAULT_MACBOOK_AIR_15_M4_PROFILE };
+    }
+    return {
+      label: "Profil automatyczny przeglądarki",
+      monitorWidthCm: state.calibration.monitorWidthCm || DEFAULT_MACBOOK_AIR_15_M4_PROFILE.monitorWidthCm,
+      refreshRate: state.refreshRateLabel !== "pomiar..." ? state.refreshRateLabel : DEFAULT_MACBOOK_AIR_15_M4_PROFILE.refreshRate,
+      monitorResolution: state.env && state.env.detectedResolution
+        ? state.env.detectedResolution
+        : DEFAULT_MACBOOK_AIR_15_M4_PROFILE.monitorResolution,
+    };
+  }
+
+  function getDetectedResolution() {
+    const width = Number(window.screen && window.screen.width) || 0;
+    const height = Number(window.screen && window.screen.height) || 0;
+    if (width > 0 && height > 0) {
+      return `${width}x${height}`;
+    }
+    return DEFAULT_MACBOOK_AIR_15_M4_PROFILE.monitorResolution;
   }
 
   async function measureRefreshRate() {
@@ -335,22 +394,52 @@
     if (!state.env) {
       return;
     }
+    const profileText =
+      `Domyślny profil konfiguracji: ${state.calibration.sourceLabel || DEFAULT_MACBOOK_AIR_15_M4_PROFILE.label}. ` +
+      "W razie potrzeby możesz ręcznie zmienić refresh rate, rozdzielczość i szerokość monitora przed startem testu.";
     const envText =
       `Wykryty system: ${state.env.platformLabel}. Rozdzielczość: ${state.env.resolutionLabel}. ` +
       `Skalowanie: ${state.env.scaleLabel}. Szacowane odświeżanie: ${state.refreshRateLabel}.`;
     elements["environment-summary"].textContent =
-      `${envText} Przed badaniem koniecznie potwierdź szerokość monitora w centymetrach według specyfikacji producenta.`;
-    elements["calibration-environment"].textContent = envText;
+      `${envText} ${profileText} Przed badaniem koniecznie potwierdź szerokość monitora w centymetrach według specyfikacji producenta.`;
+    elements["calibration-environment"].textContent = `${envText} ${profileText}`;
     elements["info-platform"].textContent = state.env.platformLabel;
     elements["info-resolution"].textContent = state.env.resolutionLabel;
     elements["info-refresh"].textContent = state.refreshRateLabel;
     elements["info-scale"].textContent = state.env.scaleLabel;
   }
 
+  function applyDefaultCalibrationProfile() {
+    const profile = getDefaultCalibrationProfile();
+    if (!state.calibration.monitorWidthCm) {
+      state.calibration.monitorWidthCm = round1(profile.monitorWidthCm);
+    }
+    if (!state.calibration.refreshRate || state.calibration.refreshRate === "pomiar...") {
+      state.calibration.refreshRate = profile.refreshRate;
+    }
+    if (!state.calibration.monitorResolution) {
+      state.calibration.monitorResolution = profile.monitorResolution;
+    }
+    if (!state.calibration.sourceLabel || state.calibration.sourceLabel === DEFAULT_MACBOOK_AIR_15_M4_PROFILE.label) {
+      state.calibration.sourceLabel = profile.label;
+    }
+    if (state.env && state.env.platformLabel === "macOS") {
+      state.calibration.monitorWidthCm = round1(state.calibration.monitorWidthCm || profile.monitorWidthCm);
+      state.calibration.refreshRate = state.calibration.refreshRate || profile.refreshRate;
+      state.calibration.monitorResolution = state.calibration.monitorResolution || profile.monitorResolution;
+      state.calibration.sourceLabel = state.calibration.sourceLabel || profile.label;
+    }
+    refreshFormsFromState();
+  }
+
   function refreshFormsFromState() {
     elements["participant-id"].value = elements["participant-id"].value || "ID_01";
     elements["monitor-width-cm"].value = String(state.calibration.monitorWidthCm);
+    elements["refresh-rate-hz"].value = state.calibration.refreshRate;
+    elements["monitor-resolution"].value = state.calibration.monitorResolution;
     elements["calibration-monitor-width"].value = String(state.calibration.monitorWidthCm);
+    elements["calibration-refresh-rate"].value = state.calibration.refreshRate;
+    elements["calibration-monitor-resolution"].value = state.calibration.monitorResolution;
     hydrateDefaultFileName();
   }
 
@@ -363,30 +452,46 @@
 
   function syncCalibrationFields() {
     elements["calibration-monitor-width"].value = elements["monitor-width-cm"].value;
-    updateGeometrySummary();
+    elements["calibration-refresh-rate"].value = elements["refresh-rate-hz"].value;
+    elements["calibration-monitor-resolution"].value = elements["monitor-resolution"].value;
+    try {
+      updateGeometrySummary();
+    } catch (_error) {
+      elements["geometry-summary"].textContent = "Uzupełnij poprawnie rozdzielczość i refresh rate, aby zobaczyć podgląd geometrii.";
+    }
   }
 
   function syncConfigMonitorWidth() {
     elements["monitor-width-cm"].value = elements["calibration-monitor-width"].value;
-    renderCalibrationPreview();
-    updateGeometrySummary();
+    elements["refresh-rate-hz"].value = elements["calibration-refresh-rate"].value;
+    elements["monitor-resolution"].value = elements["calibration-monitor-resolution"].value;
+    try {
+      renderCalibrationPreview();
+      updateGeometrySummary();
+    } catch (_error) {
+      elements["geometry-summary"].textContent = "Uzupełnij poprawnie rozdzielczość i refresh rate, aby zobaczyć podgląd geometrii.";
+      elements["calibration-preview"].textContent = "Uzupełnij poprawnie rozdzielczość i refresh rate, aby zobaczyć podgląd geometrii.";
+    }
   }
 
   function updateGeometrySummary() {
     const widthCm = Number(elements["monitor-width-cm"].value || state.calibration.monitorWidthCm);
-    const geometry = computeGeometry(widthCm, window.innerWidth || window.screen.width || 1920);
+    const resolutionText = normalizeResolutionInput(elements["monitor-resolution"].value || state.calibration.monitorResolution);
+    const geometry = computeGeometry(widthCm, getResolutionWidthPx(resolutionText));
     elements["geometry-summary"].textContent =
-      `Dla szerokości ${round1(widthCm)} cm i odległości ${VIEWING_DISTANCE_CM} cm wysokość liter 0,5° to około ${round1(geometry.fontPx)} px, a ekscentryczność 3,5° to około ${round1(geometry.offsetPx)} px od środka ekranu.`;
+      `Dla szerokości ${round1(widthCm)} cm, rozdzielczości ${resolutionText} i odległości ${VIEWING_DISTANCE_CM} cm wysokość liter 0,5° to około ${round1(geometry.fontPx)} px, a ekscentryczność 3,5° to około ${round1(geometry.offsetPx)} px od środka ekranu.`;
     renderCalibrationPreview();
   }
 
   function renderCalibrationPreview() {
     const widthCm = Number(elements["calibration-monitor-width"].value || state.calibration.monitorWidthCm);
-    const geometry = computeGeometry(widthCm, window.innerWidth || window.screen.width || 1920);
+    const resolutionText = normalizeResolutionInput(elements["calibration-monitor-resolution"].value || state.calibration.monitorResolution);
+    const refreshText = normalizeRefreshRateInput(elements["calibration-refresh-rate"].value || state.calibration.refreshRate);
+    const geometry = computeGeometry(widthCm, getResolutionWidthPx(resolutionText));
     const fontPx = clamp(geometry.fontPx, 18, 54);
     const offsetPx = clamp(geometry.offsetPx, 70, 420);
     elements["calibration-preview"].textContent =
-      `Podgląd wykorzystuje ekscentryczność ${ECCENTRICITY_DEG}° i wysokość znaków ${LETTER_HEIGHT_DEG}°. Jeśli szerokość monitora jest błędna, pozycje bodźców również będą błędne.`;
+      `Podgląd wykorzystuje ekscentryczność ${ECCENTRICITY_DEG}°, wysokość znaków ${LETTER_HEIGHT_DEG}°, rozdzielczość ${resolutionText} i refresh rate ${refreshText}. Jeśli te parametry są błędne, pozycje i timing bodźców również będą błędne.`;
     elements["calibration-left"].style.fontSize = `${fontPx}px`;
     elements["calibration-right"].style.fontSize = `${fontPx}px`;
     elements["calibration-left"].style.left = `calc(50% - ${offsetPx}px)`;
@@ -396,12 +501,21 @@
   function openConfigScreen() {
     clearConfigError();
     updateSaveStatus();
-    updateGeometrySummary();
+    try {
+      updateGeometrySummary();
+    } catch (_error) {
+      elements["geometry-summary"].textContent = "Uzupełnij poprawnie rozdzielczość i refresh rate, aby zobaczyć podgląd geometrii.";
+    }
     showScreen("screen-config");
   }
 
   function openCalibrationScreen() {
-    updateGeometrySummary();
+    try {
+      updateGeometrySummary();
+    } catch (_error) {
+      elements["geometry-summary"].textContent = "Uzupełnij poprawnie rozdzielczość i refresh rate, aby zobaczyć podgląd geometrii.";
+      elements["calibration-preview"].textContent = "Uzupełnij poprawnie rozdzielczość i refresh rate, aby zobaczyć podgląd geometrii.";
+    }
     showScreen("screen-calibration");
   }
 
@@ -521,11 +635,19 @@
   function saveCalibration() {
     try {
       const widthCm = parseMonitorWidth(elements["calibration-monitor-width"].value);
+      const refreshRate = normalizeRefreshRateInput(elements["calibration-refresh-rate"].value);
+      const monitorResolution = normalizeResolutionInput(elements["calibration-monitor-resolution"].value);
       state.calibration.monitorWidthCm = round1(widthCm);
+      state.calibration.refreshRate = refreshRate;
+      state.calibration.monitorResolution = monitorResolution;
+      state.calibration.sourceLabel = "Wartości wpisane ręcznie w konfiguracji";
       elements["monitor-width-cm"].value = String(state.calibration.monitorWidthCm);
+      elements["refresh-rate-hz"].value = state.calibration.refreshRate;
+      elements["monitor-resolution"].value = state.calibration.monitorResolution;
       saveStorage(STORAGE_KEYS.calibration, JSON.stringify(state.calibration));
       updateGeometrySummary();
-      logEvent("INFO", `Zapisano kalibrację monitora: ${state.calibration.monitorWidthCm} cm.`);
+      renderEnvironmentInfo();
+      logEvent("INFO", `Zapisano kalibrację monitora: ${state.calibration.monitorWidthCm} cm, ${state.calibration.monitorResolution}, ${state.calibration.refreshRate}.`);
       openConfigScreen();
     } catch (error) {
       handleNonFatalMessage(error instanceof Error ? error.message : String(error));
@@ -548,7 +670,12 @@
         throw new Error("Brakuje lokalnych bibliotek PsychoJS. Sprawdź, czy folder APP/lib został poprawnie rozpakowany.");
       }
       const widthCm = parseMonitorWidth(elements["monitor-width-cm"].value);
+      const refreshRate = normalizeRefreshRateInput(elements["refresh-rate-hz"].value);
+      const monitorResolution = normalizeResolutionInput(elements["monitor-resolution"].value);
       state.calibration.monitorWidthCm = round1(widthCm);
+      state.calibration.refreshRate = refreshRate;
+      state.calibration.monitorResolution = monitorResolution;
+      state.calibration.sourceLabel = "Wartości wpisane ręcznie w konfiguracji";
       saveStorage(STORAGE_KEYS.calibration, JSON.stringify(state.calibration));
       await prepareSessionFromConfig(readConfig());
       await enterFullscreenForRun(true);
@@ -599,9 +726,41 @@
       mainCount: 256,
       monitorWidthCm: state.calibration.monitorWidthCm,
       randomSeed: generateSeed(),
-      refreshRate: state.refreshRateLabel,
-      monitorResolution: state.env ? state.env.resolutionLabel.replace(" × ", "x").replace(" px", "") : `${window.screen.width}x${window.screen.height}`,
+      refreshRate: normalizeRefreshRateInput(elements["refresh-rate-hz"].value || state.calibration.refreshRate),
+      monitorResolution: normalizeResolutionInput(elements["monitor-resolution"].value || state.calibration.monitorResolution),
     };
+  }
+
+  function normalizeRefreshRateInput(rawValue) {
+    const value = String(rawValue || "").trim().replace(",", ".");
+    if (!value) {
+      throw new Error("Wpisz refresh rate monitora, np. 60 Hz.");
+    }
+    const numeric = Number.parseFloat(value.replace(/hz/ig, "").trim());
+    if (!Number.isFinite(numeric) || numeric < 20 || numeric > 1000) {
+      throw new Error("Refresh rate musi być liczbą z zakresu 20-1000 Hz, np. 60 Hz.");
+    }
+    const rounded = Number.isInteger(numeric) ? String(numeric) : round2(numeric).toString();
+    return `${rounded} Hz`;
+  }
+
+  function normalizeResolutionInput(rawValue) {
+    const compact = String(rawValue || "").trim().toLowerCase().replace(/\s+/g, "");
+    const match = compact.match(/^(\d{3,5})[x×](\d{3,5})$/);
+    if (!match) {
+      throw new Error("Rozdzielczość wpisz w formacie szerokośćxwysokość, np. 2880x1864.");
+    }
+    const width = Number(match[1]);
+    const height = Number(match[2]);
+    if (!Number.isFinite(width) || !Number.isFinite(height) || width < 640 || height < 480) {
+      throw new Error("Rozdzielczość monitora jest poza dopuszczalnym zakresem.");
+    }
+    return `${width}x${height}`;
+  }
+
+  function getResolutionWidthPx(resolutionText) {
+    const match = String(resolutionText || "").match(/^(\d{3,5})x(\d{3,5})$/i);
+    return match ? Number(match[1]) : (window.screen.width || 1920);
   }
 
   function parsePositiveInt(rawValue, message) {
@@ -1669,7 +1828,11 @@
   }
 
   function handleResize() {
-    updateGeometrySummary();
+    try {
+      updateGeometrySummary();
+    } catch (_error) {
+      elements["geometry-summary"].textContent = "Uzupełnij poprawnie rozdzielczość i refresh rate, aby zobaczyć podgląd geometrii.";
+    }
     if (isScreenVisible("screen-run")) {
       applyRunLayout();
       resizePsychoJsStage();
@@ -1740,7 +1903,7 @@
   }
 
   function computeGeometry(monitorWidthCm, widthPx) {
-    const safeWidthCm = Math.max(20, Number(monitorWidthCm) || 53);
+    const safeWidthCm = Math.max(20, Number(monitorWidthCm) || DEFAULT_MACBOOK_AIR_15_M4_PROFILE.monitorWidthCm);
     const safeWidthPx = Math.max(800, Number(widthPx) || window.screen.width || 1920);
     const pxPerCm = safeWidthPx / safeWidthCm;
     return {
@@ -1910,10 +2073,12 @@
       assert(parsed.ok, parsed.message || "Walidacja bodźców");
       [1001, 1002, 1003].forEach((seed) => validateTrialSet(buildMainTrials("f", "j", seed)));
       assert(buildPracticeTrials(1004).length === 10, "Trening powinien mieć 10 prób.");
-      const geometry = computeGeometry(53, 1920);
+      const geometry = computeGeometry(DEFAULT_MACBOOK_AIR_15_M4_PROFILE.monitorWidthCm, 2880);
       assert(geometry.fontPx > 0 && geometry.offsetPx > 0, "Geometria musi dawać dodatnie wartości.");
       const clockString = formatClockTimeWithMs(new Date("2026-04-08T13:14:15.321"));
       assert(/^\d{2}:\d{2}:\d{2}\.\d{3}$/.test(clockString), "Czas klawiatury i CSV powinien zawierać milisekundy.");
+      assert(Boolean(elements["refresh-rate-hz"].value.trim()), "Pole refresh rate nie powinno być puste.");
+      assert(/^\d{3,5}x\d{3,5}$/i.test(elements["monitor-resolution"].value.trim()), "Pole rozdzielczości powinno mieć format szerokośćxwysokość.");
       runPsychoJsSmokeTest();
       psychoJS.event._onMouseDown({ button: 0, offsetX: 12, offsetY: 18 });
       state.awaitingResponse = true;
@@ -1965,10 +2130,10 @@
         fixationMs: 16,
         stimulusMs: 16,
         responseMs: 64,
-        monitorWidthCm: 53,
+        monitorWidthCm: DEFAULT_MACBOOK_AIR_15_M4_PROFILE.monitorWidthCm,
         randomSeed: 8888,
-        refreshRate: "60 Hz",
-        monitorResolution: "1920x1080",
+        refreshRate: DEFAULT_MACBOOK_AIR_15_M4_PROFILE.refreshRate,
+        monitorResolution: DEFAULT_MACBOOK_AIR_15_M4_PROFILE.monitorResolution,
       });
       state.phase = "instructions";
       state.instructionIndex = 0;

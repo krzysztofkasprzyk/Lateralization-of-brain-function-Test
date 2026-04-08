@@ -153,6 +153,18 @@
 
               <div class="field-row">
                 <label>
+                  <span>Refresh rate (Hz)</span>
+                  <input id="refresh-rate-hz" type="text" value="60 Hz" required>
+                </label>
+
+                <label>
+                  <span>Rozdzielczość monitora (px)</span>
+                  <input id="monitor-resolution" type="text" value="2880x1864" required>
+                </label>
+              </div>
+
+              <div class="field-row">
+                <label>
                   <span>Fiksacja (ms)</span>
                   <input id="fixation-ms" type="number" value="1000" min="100" max="5000" step="10">
                 </label>
@@ -233,6 +245,18 @@
                 <input id="calibration-monitor-width" type="number" value="53.0" min="20" max="120" step="0.1">
               </label>
 
+              <div class="field-row">
+                <label>
+                  <span>Refresh rate (Hz)</span>
+                  <input id="calibration-refresh-rate" type="text" value="60 Hz" required>
+                </label>
+
+                <label>
+                  <span>Rozdzielczość monitora (px)</span>
+                  <input id="calibration-monitor-resolution" type="text" value="2880x1864" required>
+                </label>
+              </div>
+
               <div class="notice notice-info" id="calibration-preview"></div>
 
               <div class="calibration-preview-box">
@@ -254,6 +278,15 @@
               <p>
                 Odczytaj szerokość aktywnej matrycy monitora w centymetrach ze specyfikacji producenta.
                 Dla każdego modelu ta wartość może być inna.
+              </p>
+            </section>
+
+            <section class="panel info-card">
+              <h3>Domyślny profil</h3>
+              <p>
+                Jeśli przeglądarka nie poda wiarygodnych danych, aplikacja uzupełni pola profilem
+                MacBook Air 15" z układem Apple M4: 2880x1864 px, 60 Hz i szerokość aktywnej matrycy
+                około 32,66 cm.
               </p>
             </section>
           </aside>

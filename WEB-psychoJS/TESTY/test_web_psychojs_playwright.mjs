@@ -108,6 +108,12 @@ async function run() {
     const previewPage = await browser.newPage({ viewport: { width: 1440, height: 960 } });
     await previewPage.goto(baseUrl, { waitUntil: "networkidle" });
     await previewPage.click("#nav-config");
+    const refreshRateValue = await previewPage.locator("#refresh-rate-hz").inputValue();
+    const resolutionValue = await previewPage.locator("#monitor-resolution").inputValue();
+    const widthValue = await previewPage.locator("#monitor-width-cm").inputValue();
+    assert(Boolean(refreshRateValue.trim()), "Pole refresh rate nie powinno być puste.");
+    assert(/^\d{3,5}x\d{3,5}$/i.test(resolutionValue.trim()), `Pole rozdzielczości ma niepoprawny format: ${resolutionValue}`);
+    assert(Number(widthValue) > 0, `Pole szerokości monitora powinno być dodatnie: ${widthValue}`);
     await previewPage.click("#start-button");
     await previewPage.waitForSelector("#screen-instructions.active");
 
