@@ -5,7 +5,7 @@ Repozytorium zawiera gotowy instalator programu oraz dokumentację użytkownika.
 ## Zawartość
 
 - `INSTALLER/TestLateralizacjiSetup.exe` - instalator programu dla Windows
-- `DOKUMENTACJA/Instrukcja_Test_Lateralizacji.docx` - instrukcja użytkownika
+- `DOKUMENTACJA/Instrukcja Test Lateralizacji v1.2026.pdf` - instrukcja użytkownika
 - `DOKUMENTACJA/README.md` - krótki opis uruchomienia i podstawowej obsługi
 
 ## Szybki start

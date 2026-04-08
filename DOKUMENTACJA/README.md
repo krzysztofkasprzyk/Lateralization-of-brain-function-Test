@@ -2,7 +2,7 @@
 
 W tym folderze znajduje się instrukcja użytkownika programu:
 
-- `Instrukcja_Test_Lateralizacji.docx`
+- `Instrukcja Test Lateralizacji v1.2026.pdf`
 
 Dokument opisuje:
 
