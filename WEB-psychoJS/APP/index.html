@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test lateralizacji - WEB PsychoJS</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div id="app-shell" class="app-shell">
+    <header class="hero">
+      <div class="hero-copy-block">
+        <p class="eyebrow">TLDT / LDT · WEB PsychoJS</p>
+        <h1>Test lateralizacji</h1>
+        <p class="hero-copy">
+          Wersja webowa PsychoJS przygotowana do uruchamiania w Google Chrome na Windows i macOS.
+          Zachowuje strukturę procedury, zapisuje wyniki do CSV i tworzy kopię awaryjną w przeglądarce.
+        </p>
+      </div>
+      <div class="hero-badge">
+        <div class="badge-mark" aria-hidden="true">TLDT</div>
+        <div>
+          <div class="badge-kicker">Wersja WEB-psychoJS</div>
+          <strong>Chrome · Windows · macOS</strong>
+          <div class="badge-copy">Bez doinstalowywania bibliotek po stronie użytkownika.</div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section id="screen-home" class="screen active">
+        <div class="layout-grid">
+          <section class="panel panel-main">
+            <div class="panel-header">
+              <h2>Menu główne</h2>
+              <p>
+                Przygotuj stanowisko, sprawdź klawiaturę, ustaw kalibrację ekranu i uruchom procedurę.
+                Układ i opisy zostały zachowane możliwie blisko wersji desktopowej.
+              </p>
+            </div>
+
+            <div class="menu-grid">
+              <button id="nav-config" class="menu-card menu-card-primary" type="button">
+                <span class="menu-card-kicker">Start</span>
+                <strong>Nowy test</strong>
+                <span>Konfiguracja uczestnika, czasów, pliku CSV i rozpoczęcie instrukcji.</span>
+              </button>
+
+              <button id="nav-keyboard" class="menu-card" type="button">
+                <span class="menu-card-kicker">Kontrola</span>
+                <strong>Test klawiatury</strong>
+                <span>Sprawdź reakcję klawiszy F, J, Spacji i Backspace przed sesją.</span>
+              </button>
+
+              <button id="nav-calibration" class="menu-card" type="button">
+                <span class="menu-card-kicker">Kalibracja</span>
+                <strong>Kalibracja ekranu</strong>
+                <span>Zweryfikuj szerokość monitora i geometrię bodźców przed badaniem.</span>
+              </button>
+
+              <button id="nav-editor" class="menu-card" type="button">
+                <span class="menu-card-kicker">Materiał</span>
+                <strong>Edytor bodźców</strong>
+                <span>Zmień listy słów, antysłów i prób treningowych bez modyfikowania kodu.</span>
+              </button>
+            </div>
+
+            <div class="home-shortcuts">
+              <div class="strip strip-blue"></div>
+              <div class="strip strip-cyan"></div>
+              <div class="strip strip-gold"></div>
+              <div class="strip strip-violet"></div>
+            </div>
+
+            <div class="notice notice-info" id="home-backup-status">
+              Kopia awaryjna wyników będzie zapisywana w pamięci przeglądarki po każdej próbie.
+            </div>
+
+            <div class="button-row">
+              <button id="nav-info" class="btn btn-secondary" type="button">Informacje o wersji webowej</button>
+              <button id="nav-self-test" class="btn btn-secondary" type="button">Uruchom testy aplikacji</button>
+            </div>
+          </section>
+
+          <aside class="sidebar">
+            <section class="panel info-card">
+              <h3>Sterowanie</h3>
+              <p><strong>F</strong> = słowo po lewej stronie.</p>
+              <p><strong>J</strong> = słowo po prawej stronie.</p>
+              <p><strong>Spacja</strong> = po obu stronach brak prawdziwego słowa.</p>
+              <p><strong>Backspace</strong> = menu pauzy podczas prób.</p>
+            </section>
+
+            <section class="panel info-card">
+              <h3>Bodźce</h3>
+              <p>
+                W edytorze możesz podmienić zestawy słów, antysłów oraz trening zachowując strukturę
+                procedury TLDT: 16 par słowo-antysłowo, 16 par antysłowo-antysłowo i 10 prób treningowych.
+              </p>
+            </section>
+
+            <section class="panel info-card">
+              <h3>Zapis danych</h3>
+              <p>
+                Chrome może zapisywać dane bezpośrednio do wskazanego pliku CSV. Dodatkowo po każdej próbie
+                tworzona jest kopia awaryjna w pamięci przeglądarki.
+              </p>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <section id="screen-config" class="screen">
+        <div class="layout-grid">
+          <section class="panel panel-main">
+            <div class="panel-header">
+              <h2>Konfiguracja badania</h2>
+              <p>
+                Ustal dane uczestnika, czasy ekspozycji, szerokość monitora i miejsce zapisu CSV.
+                Ta wersja działa w Chrome i informuje przed startem, jakie parametry środowiska wykryła.
+              </p>
+            </div>
+
+            <form id="config-form" class="config-form">
+              <div class="field-row">
+                <label>
+                  <span>ID uczestnika</span>
+                  <input id="participant-id" type="text" value="ID_01" required>
+                </label>
+
+                <label>
+                  <span>Nazwa pliku CSV</span>
+                  <input id="csv-name" type="text" value="ID_01_20260408.csv" required>
+                </label>
+              </div>
+
+              <div class="field-row">
+                <label>
+                  <span>Próby treningowe</span>
+                  <input id="practice-count" type="number" value="10" min="10" max="10" readonly>
+                </label>
+
+                <label>
+                  <span>Próby główne</span>
+                  <input id="main-count" type="number" value="256" min="256" max="256" readonly>
+                </label>
+
+                <label>
+                  <span>Szerokość monitora (cm)</span>
+                  <input id="monitor-width-cm" type="number" value="53.0" min="20" max="120" step="0.1">
+                </label>
+              </div>
+
+              <div class="field-row">
+                <label>
+                  <span>Fiksacja (ms)</span>
+                  <input id="fixation-ms" type="number" value="1000" min="100" max="5000" step="10">
+                </label>
+
+                <label>
+                  <span>Ekspozycja bodźców (ms)</span>
+                  <input id="stimulus-ms" type="number" value="100" min="20" max="1000" step="10">
+                </label>
+
+                <label>
+                  <span>Okno odpowiedzi (ms)</span>
+                  <input id="response-ms" type="number" value="2000" min="100" max="5000" step="10">
+                </label>
+              </div>
+
+              <div class="save-box">
+                <div>
+                  <strong>Zapis wyników</strong>
+                  <p id="save-status">
+                    Możesz wskazać plik CSV w Chrome. Jeśli tego nie zrobisz, dane i tak będą zapisywane
+                    do kopii awaryjnej w pamięci przeglądarki i będzie można je pobrać po badaniu.
+                  </p>
+                </div>
+                <button id="choose-save-file" class="btn btn-secondary" type="button">Wybierz plik CSV</button>
+              </div>
+
+              <div class="notice notice-info" id="environment-summary"></div>
+              <div class="notice notice-info" id="geometry-summary"></div>
+              <div class="notice notice-error hidden" id="config-error"></div>
+
+              <div class="button-row">
+                <button id="config-back" class="btn btn-secondary" type="button">Powrót do menu</button>
+                <button id="config-keyboard" class="btn btn-secondary" type="button">Test klawiatury</button>
+                <button id="config-calibration" class="btn btn-secondary" type="button">Kalibracja ekranu</button>
+                <button id="config-editor" class="btn btn-secondary" type="button">Edytor bodźców</button>
+                <button id="start-button" class="btn btn-primary" type="submit">Rozpocznij instrukcję</button>
+              </div>
+            </form>
+          </section>
+
+          <aside class="sidebar">
+            <section class="panel info-card">
+              <h3>Ważne przed startem</h3>
+              <p>
+                Przeglądarka potrafi wykryć system, rozdzielczość i skalowanie, ale nie zna fizycznej szerokości
+                monitora. Dlatego wartość w centymetrach trzeba sprawdzić w specyfikacji producenta i potwierdzić.
+              </p>
+            </section>
+
+            <section class="panel info-card">
+              <h3>Przebieg</h3>
+              <p>1. Instrukcje.</p>
+              <p>2. Trening z informacją zwrotną.</p>
+              <p>3. Podsumowanie treningu.</p>
+              <p>4. Część główna 256 prób z przerwą po 128.</p>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <section id="screen-calibration" class="screen">
+        <div class="layout-grid">
+          <section class="panel panel-main">
+            <div class="panel-header">
+              <h2>Kalibracja ekranu</h2>
+              <p>
+                Ta strona pomaga potwierdzić parametry geometryczne badania. Rozdzielczość i system są wykrywane
+                automatycznie, ale szerokość monitora trzeba sprawdzić ręcznie, bo przeglądarka nie ma do niej
+                bezpośredniego dostępu.
+              </p>
+            </div>
+
+            <div class="config-form">
+              <div class="notice notice-info" id="calibration-environment"></div>
+
+              <label>
+                <span>Szerokość monitora (cm)</span>
+                <input id="calibration-monitor-width" type="number" value="53.0" min="20" max="120" step="0.1">
+              </label>
+
+              <div class="notice notice-info" id="calibration-preview"></div>
+
+              <div class="calibration-preview-box">
+                <div class="calibration-cross">+</div>
+                <div id="calibration-left" class="calibration-word calibration-left">agenda</div>
+                <div id="calibration-right" class="calibration-word calibration-right">asenga</div>
+              </div>
+
+              <div class="button-row">
+                <button id="save-calibration" class="btn btn-primary" type="button">Zapisz kalibrację</button>
+                <button id="calibration-back" class="btn btn-secondary" type="button">Powrót</button>
+              </div>
+            </div>
+          </section>
+
+          <aside class="sidebar">
+            <section class="panel info-card">
+              <h3>Jak ustalić szerokość</h3>
+              <p>
+                Odczytaj szerokość aktywnej matrycy monitora w centymetrach ze specyfikacji producenta.
+                Dla każdego modelu ta wartość może być inna.
+              </p>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <section id="screen-keyboard" class="screen">
+        <div class="layout-grid">
+          <section class="panel panel-main">
+            <div class="panel-header">
+              <h2>Test klawiatury</h2>
+              <p>
+                Naciskaj klawisze F, J, Spację i Backspace. Aplikacja od razu pokaże, czy sygnał został
+                przechwycony. Na tym ekranie Backspace nie otwiera menu pauzy i nie cofa strony.
+              </p>
+            </div>
+
+            <div class="keyboard-grid">
+              <div class="key-card" id="key-card-f">
+                <span class="key-name">F</span>
+                <strong>Lewa odpowiedź</strong>
+                <span id="key-status-f">Oczekuje</span>
+              </div>
+              <div class="key-card" id="key-card-j">
+                <span class="key-name">J</span>
+                <strong>Prawa odpowiedź</strong>
+                <span id="key-status-j">Oczekuje</span>
+              </div>
+              <div class="key-card" id="key-card-space">
+                <span class="key-name">Spacja</span>
+                <strong>Brak słowa</strong>
+                <span id="key-status-space">Oczekuje</span>
+              </div>
+              <div class="key-card" id="key-card-backspace">
+                <span class="key-name">Backspace</span>
+                <strong>Menu pauzy</strong>
+                <span id="key-status-backspace">Oczekuje</span>
+              </div>
+            </div>
+
+            <div class="notice notice-info" id="keyboard-last-event">
+              Ostatni klawisz: brak.
+            </div>
+
+            <div class="button-row">
+              <button id="keyboard-back" class="btn btn-secondary" type="button">Powrót</button>
+            </div>
+          </section>
+
+          <aside class="sidebar">
+            <section class="panel info-card">
+              <h3>Wskazówka</h3>
+              <p>
+                Jeśli któryś z klawiszy nie reaguje, sprawdź układ klawiatury, fokus okna Chrome i upewnij się,
+                że nie działa inna aplikacja przechwytująca skróty.
+              </p>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <section id="screen-editor" class="screen">
+        <div class="layout-grid">
+          <section class="panel panel-main">
+            <div class="panel-header">
+              <h2>Edytor bodźców</h2>
+              <p>
+                W każdej linii wpisz dokładnie jedną parę rozdzieloną przecinkiem. Dla treningu wpisz:
+                <strong>LVF,RVF,poprawna_odpowiedź</strong>. Aplikacja pilnuje struktury procedury.
+              </p>
+            </div>
+
+            <div class="editor-grid">
+              <label>
+                <span>16 par słowo, antysłowo</span>
+                <textarea id="editor-word-nonword" rows="12"></textarea>
+              </label>
+
+              <label>
+                <span>16 par antysłowo, antysłowo</span>
+                <textarea id="editor-nonword-nonword" rows="12"></textarea>
+              </label>
+
+              <label class="editor-wide">
+                <span>10 prób treningowych: LVF,RVF,F/J/space</span>
+                <textarea id="editor-practice" rows="10"></textarea>
+              </label>
+            </div>
+
+            <div class="notice notice-error hidden" id="editor-error"></div>
+
+            <div class="button-row">
+              <button id="save-editor" class="btn btn-primary" type="button">Zapisz bodźce</button>
+              <button id="reset-editor" class="btn btn-secondary" type="button">Przywróć domyślne</button>
+              <button id="editor-back" class="btn btn-secondary" type="button">Powrót</button>
+            </div>
+          </section>
+
+          <aside class="sidebar">
+            <section class="panel info-card">
+              <h3>Zasady walidacji</h3>
+              <p>Lista słowo-antysłowo musi zawierać dokładnie 16 par.</p>
+              <p>Lista antysłowo-antysłowo musi zawierać dokładnie 16 par.</p>
+              <p>Trening musi zawierać dokładnie 10 prób.</p>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <section id="screen-info" class="screen">
+        <div class="layout-grid">
+          <section class="panel panel-main">
+            <div class="panel-header">
+              <h2>Informacje o wersji webowej</h2>
+              <p>
+                Ta wersja działa jako samodzielny pakiet HTML/CSS/JS uruchamiany w Google Chrome.
+                Została zoptymalizowana do pracy bez instalowania bibliotek Pythona.
+              </p>
+            </div>
+
+            <div class="info-copy">
+              <p><strong>System:</strong> <span id="info-platform"></span></p>
+              <p><strong>Rozdzielczość:</strong> <span id="info-resolution"></span></p>
+              <p><strong>Szacowane odświeżanie:</strong> <span id="info-refresh"></span></p>
+              <p><strong>Skalowanie:</strong> <span id="info-scale"></span></p>
+              <p>
+                Wyniki można zapisywać bezpośrednio do wskazanego pliku CSV, a równolegle tworzona jest kopia
+                awaryjna w pamięci przeglądarki Chrome na danym komputerze.
+              </p>
+            </div>
+
+            <div class="button-row">
+              <button id="info-back" class="btn btn-secondary" type="button">Powrót</button>
+            </div>
+          </section>
+
+          <aside class="sidebar">
+            <section class="panel info-card">
+              <h3>Ważne ograniczenie</h3>
+              <p>
+                Przeglądarka nie ma dostępu do fizycznej szerokości monitora. Dlatego parametr w centymetrach
+                trzeba potwierdzić ręcznie przed badaniem.
+              </p>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <section id="screen-instructions" class="screen screen-centered">
+        <div class="instruction-card">
+          <div id="instruction-progress" class="instruction-progress">1 / 4</div>
+          <h2 id="instruction-title">Instrukcja</h2>
+          <div id="instruction-body" class="instruction-body"></div>
+          <p class="instruction-footer">
+            Naciśnij <strong>Spację</strong> albo kliknij przycisk, aby przejść dalej.
+          </p>
+          <div class="button-row center">
+            <button id="instruction-next" class="btn btn-primary" type="button">Dalej</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="screen-ready" class="screen screen-centered">
+        <div class="instruction-card">
+          <div id="ready-progress" class="instruction-progress">Gotowość</div>
+          <h2 id="ready-title">Za chwilę rozpocznie się etap</h2>
+          <div id="ready-body" class="instruction-body"></div>
+          <p class="instruction-footer">
+            Naciśnij <strong>Spację</strong> albo kliknij przycisk, aby rozpocząć.
+          </p>
+          <div class="button-row center">
+            <button id="ready-next" class="btn btn-primary" type="button">Rozpocznij</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="screen-break" class="screen screen-centered">
+        <div class="instruction-card">
+          <div id="break-progress" class="instruction-progress">Przerwa</div>
+          <h2 id="break-title">Podsumowanie etapu</h2>
+          <div id="break-body" class="instruction-body"></div>
+          <p class="instruction-footer">
+            Naciśnij <strong>Spację</strong> albo kliknij, aby kontynuować.
+          </p>
+          <div class="button-row center">
+            <button id="break-next" class="btn btn-primary" type="button">Kontynuuj</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="screen-run" class="screen screen-run">
+        <div id="run-stage" class="run-stage">
+          <div id="trial-phase-label" class="phase-label">TRENING</div>
+          <div id="trial-counter" class="trial-counter">1 / 10</div>
+          <div id="fixation" class="fixation hidden">+</div>
+          <div id="stimulus-left" class="stimulus stimulus-left hidden"></div>
+          <div id="stimulus-right" class="stimulus stimulus-right hidden"></div>
+          <div id="feedback" class="feedback hidden"></div>
+        </div>
+
+        <div id="pause-overlay" class="overlay hidden">
+          <div class="overlay-card">
+            <div class="overlay-accent"></div>
+            <h2>Menu pauzy</h2>
+            <p>
+              Badanie zostało wstrzymane. Możesz wrócić do bieżącej próby, przełączyć tryb pełnoekranowy
+              albo przerwać sesję.
+            </p>
+            <div class="button-column">
+              <button id="pause-resume" class="btn btn-primary" type="button">Powrót do testu</button>
+              <button id="pause-fullscreen" class="btn btn-secondary" type="button">Przełącz pełny ekran</button>
+              <button id="pause-abort" class="btn btn-danger" type="button">Zakończ test i wróć do menu</button>
+              <button id="pause-close-app" class="btn btn-secondary" type="button">Zamknij kartę</button>
+            </div>
+            <p class="overlay-footer">
+              W tej wersji menu pauzy otwiera <strong>Backspace</strong>, bo klawisz Esc jest zajęty przez Chrome.
+            </p>
+          </div>
+        </div>
+
+        <div id="confirm-overlay" class="overlay hidden">
+          <div class="overlay-card overlay-card-warning">
+            <h2 id="confirm-title">Potwierdzenie</h2>
+            <p id="confirm-body"></p>
+            <div class="button-row">
+              <button id="confirm-yes" class="btn btn-danger" type="button">Potwierdź</button>
+              <button id="confirm-no" class="btn btn-secondary" type="button">Wróć</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="screen-summary" class="screen screen-centered">
+        <div class="instruction-card">
+          <div id="summary-status" class="instruction-progress">Podsumowanie</div>
+          <h2 id="summary-title">Wynik testu</h2>
+          <div id="summary-body" class="instruction-body"></div>
+          <div class="button-row center">
+            <button id="summary-download" class="btn btn-secondary" type="button">Pobierz CSV</button>
+            <button id="summary-download-log" class="btn btn-secondary" type="button">Pobierz log</button>
+            <button id="summary-restart" class="btn btn-primary" type="button">Powrót do menu</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="screen-error" class="screen screen-centered">
+        <div class="instruction-card">
+          <div class="instruction-progress error-progress">Błąd aplikacji</div>
+          <h2>Wystąpił nieoczekiwany błąd</h2>
+          <div id="error-body" class="instruction-body"></div>
+          <div class="button-row center">
+            <button id="error-download-log" class="btn btn-secondary" type="button">Pobierz log</button>
+            <button id="error-download-csv" class="btn btn-secondary" type="button">Pobierz kopię CSV</button>
+            <button id="error-restart" class="btn btn-primary" type="button">Powrót do menu</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="screen-self-test" class="screen screen-centered">
+        <div class="instruction-card">
+          <div class="instruction-progress">Testy aplikacji</div>
+          <h2>Walidacja wersji webowej</h2>
+          <pre id="self-test-output" class="self-test-output"></pre>
+          <div class="button-row center">
+            <button id="self-test-back" class="btn btn-primary" type="button">Powrót do menu</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="fullscreen-overlay" class="overlay hidden">
+    <div class="overlay-card">
+      <div class="overlay-accent"></div>
+      <h2>Wymagany pełny ekran</h2>
+      <p id="fullscreen-overlay-body">
+        Badanie zostało wstrzymane, ponieważ przeglądarka opuściła tryb pełnoekranowy.
+        Aby kontynuować, wróć do pełnego ekranu.
+      </p>
+      <div class="button-column">
+        <button id="fullscreen-overlay-resume" class="btn btn-primary" type="button">Wróć do pełnego ekranu</button>
+        <button id="fullscreen-overlay-menu" class="btn btn-secondary" type="button">Powrót do menu głównego</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./lib/vendors/pixi.min.js"></script>
+  <script src="./lib/vendors/stats.min.js"></script>
+  <script src="./lib/psychojs/main.js"></script>
+  <script src="./lib/psychojs/util.js"></script>
+  <script src="./lib/psychojs/colors.js"></script>
+  <script src="./lib/psychojs/core.js"></script>
+  <script src="./lib/psychojs/logging.js"></script>
+  <script src="./lib/psychojs/events.js"></script>
+  <script src="./lib/psychojs/visual.js"></script>
+  <script defer src="./app.js"></script>
+</body>
+</html>
