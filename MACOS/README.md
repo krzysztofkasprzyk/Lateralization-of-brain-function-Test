@@ -23,8 +23,14 @@ To zbuduje natywny pakiet macOS `.pkg` albo paczke `.zip` z aplikacja.
 ## Wymagania
 
 - macOS na Apple Silicon
-- Python 3.11
-- polaczenie z internetem przy pierwszym uruchomieniu, aby pobrac zaleznosci
+- uprawnienia administratora moga byc potrzebne przy instalacji dolaczonego Python 3.11
+- polaczenie z internetem nadal moze byc potrzebne do dogrania czesci zaleznosci, jesli lokalna paczka nie wystarczy
+
+## Co jest juz w paczce
+
+- lokalny instalator `Python 3.11.9` dla macOS
+- lokalny wheel `psychopy-2026.1.3`
+- skrypty z logowaniem i obsluga bledow
 
 ## Gdy pojawi sie blad
 
