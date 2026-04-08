@@ -1,1 +1,2 @@
 INSTALLER/*.exe filter=lfs diff=lfs merge=lfs -text
+MACOS_v2/*.zip filter=lfs diff=lfs merge=lfs -text
