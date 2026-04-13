@@ -1,10 +1,10 @@
-# Test Lateralizacji - Web PsychoJS V1
+# Test Lateralizacji - Web PsychoJS V2
 
 To jest finalna, przeglądarkowa wersja testu lateralizacji TLDT / LDT przygotowana do uruchamiania w Google Chrome na Windows i macOS.
 
 ## Co znajduje się w branchu
 
-- `PAKIET/Test Lateralizacji - Web PsychoJS V1.zip`
+- `PAKIET/Test Lateralizacji - Web PsychoJS V2.zip`
 - `DOKUMENTACJA/Instrukcja Test Lateralizacji - Web PsychoJS V1.docx`
 
 ## Czym jest ta wersja
@@ -22,7 +22,7 @@ Program:
 
 ## Jak uruchomić
 
-1. Pobierz plik `Test Lateralizacji - Web PsychoJS V1.zip`.
+1. Pobierz plik `Test Lateralizacji - Web PsychoJS V2.zip`.
 2. Rozpakuj paczkę ZIP.
 3. Otwórz rozpakowany folder.
 4. Uruchom plik `Test lateralizacji.html` w Google Chrome.
