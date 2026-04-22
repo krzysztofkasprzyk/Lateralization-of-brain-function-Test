@@ -1,28 +1,28 @@
-# Test Lateralizacji - Web PsychoJS V2
+﻿# Test Lateralizacji - Web PsychoJS V3
 
-To jest finalna, przeglądarkowa wersja testu lateralizacji TLDT / LDT przygotowana do uruchamiania w Google Chrome na Windows i macOS.
+To jest aktualna, przeglądarkowa wersja testu lateralizacji TLDT / LDT przygotowana do uruchamiania w Google Chrome na Windows i macOS.
 
 ## Co znajduje się w branchu
 
-- `PAKIET/Test Lateralizacji - Web PsychoJS V2.zip`
-- `DOKUMENTACJA/Instrukcja Test Lateralizacji - Web PsychoJS V1.docx`
+- `PAKIET/Test Lateralizacji - Web PsychoJS V3.zip`
+- `DOKUMENTACJA/Dokumentacja - Test Lateralizacji V2.pdf`
+- `DOKUMENTACJA/Raport wdrożenia - PsychoJS ver.3.md`
 
-## Czym jest ta wersja
+## Co zmieniło się w ver.3
 
-To wersja webowa oparta o lokalne biblioteki `PsychoJS`, czyli webową bibliotekę z ekosystemu PsychoPy. Po rozpakowaniu działa bez instalowania Pythona i bez dodatkowych skryptów uruchomieniowych.
+W tej rewizji dopracowano przede wszystkim warstwę analityczną i eksport wyników:
 
-Program:
-
-- prowadzi instrukcje, trening i część główną 256 prób,
-- działa w pełnym ekranie podczas badania,
-- zapisuje dane do CSV,
-- tworzy kopię awaryjną sesji w przeglądarce,
-- pozwala zmieniać bodźce i parametry monitora,
-- ma opcjonalne przełączniki `[DEBUG/TEST INFO]`.
+- dodano eksport `XLSX` obok `CSV`,
+- rozszerzono dane o pola `phase`, `trial_id`, `block_type` i `word_side`,
+- uporządkowano znaczenie `trial_number`,
+- rozróżniono wszystkie główne typy prób w `trial_type`,
+- zbalansowano bloki `128 / 128`,
+- dodano kontrolę, aby ta sama para bodźców nie pojawiała się w dwóch poprzednich próbach,
+- utrzymano kopię awaryjną w pamięci przeglądarki.
 
 ## Jak uruchomić
 
-1. Pobierz plik `Test Lateralizacji - Web PsychoJS V2.zip`.
+1. Pobierz plik `Test Lateralizacji - Web PsychoJS V3.zip`.
 2. Rozpakuj paczkę ZIP.
 3. Otwórz rozpakowany folder.
 4. Uruchom plik `Test lateralizacji.html` w Google Chrome.
@@ -35,11 +35,21 @@ Najlepiej:
 
 ## Jak działa zapis danych
 
-- każdy badany może mieć osobny plik CSV,
-- domyślna nazwa pliku korzysta z `ID uczestnika` i czasu uruchomienia,
-- można wskazać bezpośredni plik zapisu CSV w Chrome,
+- każdy badany może mieć osobny plik wynikowy,
+- można wskazać bezpośredni plik zapisu `CSV` w Chrome,
+- po zakończeniu badania wyniki można pobrać jako `CSV` lub `XLSX`,
 - niezależnie od tego aplikacja utrzymuje kopię awaryjną w pamięci przeglądarki.
 
 ## Dokumentacja
 
-W folderze `DOKUMENTACJA` znajduje się instrukcja `.docx` przygotowana do dalszego uzupełnienia o aktualne screeny programu.
+- `Dokumentacja - Test Lateralizacji V2.pdf` zawiera instrukcję użytkową dla operatora,
+- `Raport wdrożenia - PsychoJS ver.3.md` zawiera odpowiedzi techniczne i metodologiczne dotyczące danych, randomizacji i timingu.
+
+## Kod źródłowy
+
+W folderze KOD_ZRODLOWY znajduje się główny kod sterujący wersji webowej:
+
+- index.html`r
+- pp.js`r
+- styles.css`r
+
