@@ -6,7 +6,7 @@ To jest aktualna, przeglądarkowa wersja testu lateralizacji TLDT / LDT przygoto
 
 - `PAKIET/Test Lateralizacji - Web PsychoJS V3.zip`
 - `DOKUMENTACJA/Dokumentacja - Test Lateralizacji V2.pdf`
-- `DOKUMENTACJA/Raport wdrożenia - PsychoJS ver.3.md`
+- `KOD_ZRODLOWY/`
 
 ## Co zmieniło się w ver.3
 
@@ -42,14 +42,12 @@ Najlepiej:
 
 ## Dokumentacja
 
-- `Dokumentacja - Test Lateralizacji V2.pdf` zawiera instrukcję użytkową dla operatora,
-- `Raport wdrożenia - PsychoJS ver.3.md` zawiera odpowiedzi techniczne i metodologiczne dotyczące danych, randomizacji i timingu.
+- `Dokumentacja - Test Lateralizacji V2.pdf` zawiera instrukcję użytkową dla operatora.
 
 ## Kod źródłowy
 
-W folderze KOD_ZRODLOWY znajduje się główny kod sterujący wersji webowej:
+W folderze `KOD_ZRODLOWY` znajduje się główny kod sterujący wersji webowej:
 
-- index.html`r
-- pp.js`r
-- styles.css`r
-
+- `index.html`
+- `app.js`
+- `styles.css`
